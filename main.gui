@@ -1,0 +1,27 @@
+<window direction="vertical">
+    <container expand="width" margin="15">
+        <text font_size="20" padding="6">Test App</text>
+    </container>
+    <container expand direction="vertical" gap="10" margin="5" padding="5">
+        <container expand="width">
+            <text padding="5">Project 1</text>
+            <space />
+            <button>
+                <text padding="5">Open</text>
+            </button>
+            <button>
+                <text padding="5">Delete</text>
+            </button>
+        </container>
+        <container expand="width">
+            <text padding="5">Project 2</text>
+            <space />
+            <button>
+                <text padding="5">Open</text>
+            </button>
+            <button>
+                <text padding="5">Delete</text>
+            </button>
+        </container>
+    </container>
+</window>
