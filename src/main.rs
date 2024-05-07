@@ -1,6 +1,7 @@
 use std::error::Error;
 
 use html_parser::Dom;
+use serde::Serialize;
 
 use crate::{element::Element, traits::into_elements::IntoElements};
 
@@ -8,6 +9,11 @@ mod consts;
 mod traits;
 mod element;
 mod render;
+
+#[derive(Serialize)]
+pub struct Context {
+    app_name: String
+}
 
 fn main() -> Result<(), Box<dyn Error>> {
     let html = include_str!("../main.gui");
@@ -23,8 +29,11 @@ fn main() -> Result<(), Box<dyn Error>> {
     assert!(matches!(elements[0], Element::Window { .. }), "Top element must be of type window");
 
     let window = elements[0].clone();
+    let context = Context {
+        app_name: String::from("Demo App"),
+    };
 
-    render::render(window);
+    render::render(window, &context);
 
     Ok(())
 }

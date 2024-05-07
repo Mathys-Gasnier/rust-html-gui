@@ -1,6 +1,6 @@
 <window direction="vertical">
     <container expand="width" margin="15">
-        <text font_size="20" padding="6">Test App</text>
+        <text font_size="20" padding="6">{app_name}</text>
     </container>
     <container expand direction="vertical" gap="10" margin="5" padding="5">
         <container expand="width">

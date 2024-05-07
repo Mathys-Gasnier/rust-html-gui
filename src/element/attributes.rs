@@ -17,9 +17,8 @@ pub trait GetAttributes {
 impl GetAttributes for HashMap<String, Option<String>> {
     fn direction(&self) -> ContainerDirection {
         self.get(DIRECTION_ATTRIBUTE_KEY)
-            .cloned()
-            .flatten()
-            .into()
+            .and_then(|v| v.as_ref())
+            .cloned().into()
     }
 
     fn expand(&self) -> Option<ContainerExpand> {
