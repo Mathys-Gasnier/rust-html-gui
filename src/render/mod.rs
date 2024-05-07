@@ -5,6 +5,7 @@ use crate::element::Element;
 
 use self::renderable::Renderable;
 
+mod size;
 mod renderable;
 mod format;
 

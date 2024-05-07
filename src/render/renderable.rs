@@ -3,11 +3,11 @@ use serde_json::Value;
 
 use crate::element::{container_direction::ContainerDirection, container_expand::ContainerExpand, Element};
 
-use super::format::fmt;
+use super::{format::fmt, size::{AxisSize, Size}};
 
 pub trait Renderable {
     fn render(&self, d: &mut RaylibDrawHandle, context: &Value, x: i32, y: i32, width: i32, height: i32);
-    fn size(&self, rl: &RaylibHandle, context: &Value) -> (Option<i32>, Option<i32>);
+    fn size(&self, rl: &RaylibHandle, context: &Value) -> Size;
 }
 
 impl Renderable for Element {
@@ -31,24 +31,24 @@ impl Renderable for Element {
                 let content_width = border_width - *padding as i32 * 2;
                 let content_height = border_height - *padding as i32 * 2;
 
-                let child_sizes: Vec<(&Element, ( Option<i32>, Option<i32>))> = childs.iter().map(|child| (child, child.size(d, context))).collect();
+                let child_sizes: Vec<(&Element, Size)> = childs.iter().map(|child| (child, child.size(d, context))).collect();
                 
-                let left_over_width = content_width - child_sizes.iter().fold(0, |acc, (_, (width, _))| acc + width.unwrap_or(0));
-                let dyn_size_alloc_number_width = child_sizes.iter().filter(|(_, (width, _))| width.is_none()).count() as i32;
+                let left_over_width = content_width - child_sizes.iter().fold(0, |acc, (_, (width, _))| acc + width.without_expand());
+                let dyn_size_alloc_number_width = child_sizes.iter().filter(|(_, (width, _))| width.is_expand()).count() as i32;
                 let dyn_size_alloc_width = if dyn_size_alloc_number_width > 0 { left_over_width / dyn_size_alloc_number_width } else { 0 };
 
-                let left_over_height = content_height - child_sizes.iter().fold(0, |acc, (_, (_, height))| acc + height.unwrap_or(0));
-                let dyn_size_alloc_number_height = child_sizes.iter().filter(|(_, (_, height))| height.is_none()).count() as i32;
+                let left_over_height = content_height - child_sizes.iter().fold(0, |acc, (_, (_, height))| acc + height.without_expand());
+                let dyn_size_alloc_number_height = child_sizes.iter().filter(|(_, (_, height))| height.is_expand()).count() as i32;
                 let dyn_size_alloc_height = if dyn_size_alloc_number_height > 0 { left_over_height / dyn_size_alloc_number_height } else { 0 };
 
                 let mut draw_x = content_x;
                 let mut draw_y = content_y;
                 for (child, ( child_width, child_height )) in child_sizes {
-                    let actual_child_width = child_width.unwrap_or(match direction {
+                    let actual_child_width = child_width.fixed_or(match direction {
                         ContainerDirection::Horizontal => dyn_size_alloc_width,
                         ContainerDirection::Vertical => content_width
                     });
-                    let actual_child_height = child_height.unwrap_or(match direction {
+                    let actual_child_height = child_height.fixed_or(match direction {
                         ContainerDirection::Horizontal => content_height,
                         ContainerDirection::Vertical => dyn_size_alloc_height
                     });
@@ -83,37 +83,38 @@ impl Renderable for Element {
         }
     }
     
-    fn size(&self, rl: &RaylibHandle, context: &Value) -> (Option<i32>, Option<i32>) {
+    fn size(&self, rl: &RaylibHandle, context: &Value) -> Size {
         match self {
-            Element::Window { .. } => (None, None),
+            Element::Window { .. } => (AxisSize::Expand(0), AxisSize::Expand(0)),
             Element::Container { childs, expand, direction, gap, margin, padding } |
             Element::Button { childs, expand, direction, gap, margin, padding } => {
-                let child_sizes: Vec<( Option<i32>, Option<i32>)> = childs.iter().map(|child| child.size(rl, context)).collect();
+                let child_sizes: Vec<Size> = childs.iter().map(|child| child.size(rl, context)).collect();
 
                 let inner_width = match direction {
-                    ContainerDirection::Horizontal => child_sizes.iter().fold(0, |acc, (width, _)| acc + width.unwrap_or(0) + *gap as i32) - *gap as i32,
-                    ContainerDirection::Vertical => child_sizes.iter().map(|(width, _)| width.unwrap_or(0)).max().unwrap_or(0),
+                    ContainerDirection::Horizontal => child_sizes.iter().fold(0, |acc, (width, _)| acc + width.without_expand() + *gap as i32) - *gap as i32,
+                    ContainerDirection::Vertical => child_sizes.iter().map(|(width, _)| width.without_expand()).max().unwrap_or(0),
                 } + (*margin as i32 * 2) + (*padding as i32 * 2);
+                
                 let inner_height = match direction {
-                    ContainerDirection::Horizontal => child_sizes.iter().map(|(_, height)| height.unwrap_or(0)).max().unwrap_or(0),
-                    ContainerDirection::Vertical => child_sizes.iter().fold(0, |acc, (_, height)| acc + height.unwrap_or(0) + *gap as i32) - *gap as i32,
+                    ContainerDirection::Horizontal => child_sizes.iter().map(|(_, height)| height.without_expand()).max().unwrap_or(0),
+                    ContainerDirection::Vertical => child_sizes.iter().fold(0, |acc, (_, height)| acc + height.without_expand() + *gap as i32) - *gap as i32,
                 } + (*margin as i32 * 2) + (*padding as i32 * 2);
 
                 match expand {
-                    Some(ContainerExpand::All) => (None, None),
-                    Some(ContainerExpand::Width) => (None, Some(inner_height)),
-                    Some(ContainerExpand::Height) => (Some(inner_width), None),
-                    None => (Some(inner_width), Some(inner_height)),
+                    Some(ContainerExpand::All) => (AxisSize::Expand(inner_width), AxisSize::Expand(inner_height)),
+                    Some(ContainerExpand::Width) => (AxisSize::Expand(inner_width), AxisSize::Fixed(inner_height)),
+                    Some(ContainerExpand::Height) => (AxisSize::Fixed(inner_width), AxisSize::Expand(inner_height)),
+                    None => (AxisSize::Fixed(inner_width), AxisSize::Fixed(inner_height)),
                 }
             },
-            Element::Space => (None, None),
+            Element::Space => (AxisSize::Expand(0), AxisSize::Expand(0)),
             Element::Text { text, font_size, margin, padding } => {
                 let text_size = rl.get_font_default().measure_text(
                     &fmt(context, text.to_owned()),
                     *font_size as f32,
                     if *font_size > 10 { *font_size as f32 / 10.0 } else { 1.0 }
                 );
-                (Some(text_size.x as i32 + (*padding as i32 * 2) + (*margin as i32 * 2)), Some(text_size.y as i32 + (*padding as i32 * 2) + (*margin as i32 * 2)))
+                (AxisSize::Fixed(text_size.x as i32 + (*padding as i32 * 2) + (*margin as i32 * 2)), AxisSize::Fixed(text_size.y as i32 + (*padding as i32 * 2) + (*margin as i32 * 2)))
             },
         }
     }
