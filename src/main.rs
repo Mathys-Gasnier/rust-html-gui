@@ -1,39 +1,49 @@
 use std::error::Error;
 
-use html_parser::Dom;
+use application::Application;
 use serde::Serialize;
 
-use crate::{element::Element, traits::into_elements::IntoElements};
-
 mod consts;
-mod traits;
 mod element;
-mod render;
+mod loader;
+mod application;
+mod format;
+mod math;
 
 #[derive(Serialize)]
-pub struct Context {
-    app_name: String
+struct Context {
+    app_name: String,
+    counter: u128,
+    projects: Vec<Project>
+}
+
+#[derive(Serialize)]
+struct Project {
+    name: String
+}
+
+impl Default for Context {
+    fn default() -> Self {
+        Self {
+            app_name: String::from("Demo App"),
+            counter: 0,
+            projects: vec![
+                Project { name: String::from("Project One") },
+                Project { name: String::from("Project Two") },
+                Project { name: String::from("Project Three") },
+            ],
+        }
+    }
+}
+
+impl Application for Context {
+    fn update(self: &mut Self) {
+        self.counter += 1;
+    }
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
-    let html = include_str!("../main.gui");
-
-    let tree = Dom::parse(html)?;
-
-    let elements: Vec<Element> = tree.children.into_elements();
-
-    #[cfg(debug_assertions)]
-    println!("{:#?}", elements);
-
-    assert!(elements.len() == 1, "Can't have more than one top element");
-    assert!(matches!(elements[0], Element::Window { .. }), "Top element must be of type window");
-
-    let window = elements[0].clone();
-    let context = Context {
-        app_name: String::from("Demo App"),
-    };
-
-    render::render(window, &context);
+    Context::render("./gui");
 
     Ok(())
 }

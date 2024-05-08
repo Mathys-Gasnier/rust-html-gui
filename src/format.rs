@@ -27,7 +27,7 @@ pub fn fmt(context: &Value, str: String) -> String {
     output
 }
 
-fn find_key<'a>(context: &'a Value, key: &'a str) -> Option<&'a Value> {
+pub fn find_key<'a>(context: &'a Value, key: &'a str) -> Option<&'a Value> {
     match context {
         Value::Object(map) => map.get(key),
         Value::Array(arr) => {

@@ -1,0 +1,11 @@
+<container direction="vertical">
+    <container expand="width" margin="15">
+        <text font_size="20" padding="6">{app_name}</text>
+    </container>
+    <container margin="10">
+        <text font_size="16">{counter}</text>
+    </container>
+    <container expand direction="vertical" gap="10" margin="5" padding="5">
+        <for each="projects" display="project.gui" />
+    </container>
+</container>

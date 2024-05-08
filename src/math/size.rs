@@ -1,12 +1,11 @@
 
-pub type Size = (AxisSize, AxisSize);
-
-pub enum AxisSize {
+#[derive(Debug, Clone)]
+pub enum Size {
     Fixed(i32),
     Expand(i32),
 }
 
-impl AxisSize {
+impl Size {
     pub fn without_expand(&self) -> i32 {
         match self {
             Self::Expand(_) => 0,
@@ -21,9 +20,16 @@ impl AxisSize {
         }
     }
 
-    pub fn fixed_or(self, default: i32) -> i32 {
+    pub fn fixed_or(&self, default: i32) -> i32 {
         match self {
             Self::Expand(_) => default,
+            Self::Fixed(n) => *n,
+        }
+    }
+
+    pub fn as_fixed(self) -> i32 {
+        match self {
+            Self::Expand(n) => n,
             Self::Fixed(n) => n,
         }
     }

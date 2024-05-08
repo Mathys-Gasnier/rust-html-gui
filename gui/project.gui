@@ -1,0 +1,10 @@
+<container expand="width">
+    <text padding="5">{name}</text>
+    <container expand="width" />
+    <button>
+        <text padding="5">Open</text>
+    </button>
+    <button>
+        <text padding="5">Delete</text>
+    </button>
+</container>
