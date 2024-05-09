@@ -2,7 +2,7 @@
     <container expand="width" margin="15" background="#16161d" text_color="#ffffff">
         <container font_size="20" padding="6">{app_name}</container>
         <container expand="width" />
-        <container id="add-project" padding="6">Add</container>
+        <container id="add-project" margin="2" padding="6">Add</container>
     </container>
     <container margin="10" id="counter-box">
         <container font_size="16" id="counter">{counter}</container>
