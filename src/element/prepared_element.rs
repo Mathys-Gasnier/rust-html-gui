@@ -1,11 +1,14 @@
+use raylib::color::Color;
+
 use crate::math::{bounding_box::BoundingBox, size::Size};
 
 use super::{container_direction::ContainerDirection, renderable_element::RenderableElement};
 
 #[derive(Debug, Clone)]
 pub enum PreparedElement {
-    Text(String, u8, ( Size, Size )),
+    Text(String, u8, Color, ( Size, Size )),
     Element {
+        id: Option<String>,
         size: (Size, Size),
         childs: Vec<PreparedElement>,
         direction: ContainerDirection,
@@ -13,30 +16,32 @@ pub enum PreparedElement {
         margin: u16,
         padding: u16,
         scrollable: Option<ContainerDirection>,
+        background: Option<Color>,
+        border: Option<Color>,
     },
 }
 
 impl PreparedElement {
     pub fn width(&self) -> &Size {
         match self {
-            Self::Text(_, _, (width, _)) => width,
+            Self::Text(_, _, _, (width, _)) => width,
             Self::Element { size: (width, _), .. } => width,
         }
     }
     pub fn height(&self) -> &Size {
         match self {
-            Self::Text(_, _, (_, height)) => height,
+            Self::Text(_, _, _, (_, height)) => height,
             Self::Element { size: (_, height), .. } => height,
         }
     }
 
     pub fn into_renderable(self, x: i32, y: i32, width: i32, height: i32) -> RenderableElement {
         match self {
-            PreparedElement::Text(text, font_size, (width, height)) => RenderableElement::Text(
-                text, font_size,
+            PreparedElement::Text(text, font_size, text_color, (width, height)) => RenderableElement::Text(
+                text, font_size, text_color,
                 BoundingBox { x, y, width: width.as_fixed(), height: height.as_fixed(), margin: 0, padding: 0 },
             ),
-            PreparedElement::Element { childs, direction, gap, margin, padding, scrollable, .. } => {
+            PreparedElement::Element { id, childs, direction, gap, margin, padding, scrollable, background, border, .. } => {
 
                 let context_x = x + margin as i32 + padding as i32;
                 let context_y = y + margin as i32 + padding as i32;
@@ -79,7 +84,7 @@ impl PreparedElement {
                 
                 RenderableElement::Element {
                     bounding_box: BoundingBox { x, y, width, height, margin: margin as i32, padding: padding as i32 },
-                    childs, scrollable,
+                    id, childs, scrollable, background, border,
                 }
             }
         }

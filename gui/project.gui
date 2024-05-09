@@ -1,10 +1,10 @@
-<container expand="width">
-    <text padding="5">{name}</text>
+<container expand="width" id="project" border="#16161d">
+    <container padding="5">{name}</container>
     <container expand="width" />
-    <button>
-        <text padding="5">Open</text>
-    </button>
-    <button>
-        <text padding="5">Delete</text>
-    </button>
+    <container id="open-{id}">
+        <container padding="5">Open</container>
+    </container>
+    <container id="delete-{id}">
+        <container padding="5">Delete</container>
+    </container>
 </container>

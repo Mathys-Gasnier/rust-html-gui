@@ -1,5 +1,5 @@
 use html_parser::Node;
-use raylib::RaylibHandle;
+use raylib::{color::Color, RaylibHandle};
 use serde_json::Value;
 
 use crate::{format::{find_key, fmt}, loader::Loader};
@@ -17,6 +17,7 @@ pub mod renderable_element;
 pub enum Element {
     Text(String),
     Element {
+        id: Option<String>,
         childs: Vec<Element>,
         expand: Option<ContainerExpand>,
         direction: ContainerDirection,
@@ -25,6 +26,9 @@ pub enum Element {
         padding: u16,
         scrollable: Option<ContainerDirection>,
         font_size: Option<u8>,
+        background: Option<Color>,
+        border: Option<Color>,
+        text_color: Option<Color>,
     },
     For {
         each: String,
@@ -63,6 +67,7 @@ impl IntoElement<Node> for Node {
                 }
 
                 Ok(Element::Element {
+                    id: element.id,
                     childs: element.children.into_elements(loader),
                     expand: element.attributes.expand(),
                     direction: element.attributes.direction(),
@@ -71,6 +76,9 @@ impl IntoElement<Node> for Node {
                     padding: element.attributes.padding(),
                     scrollable: element.attributes.scrollable(),
                     font_size: element.attributes.font_size(),
+                    background: element.attributes.background(),
+                    border: element.attributes.border(),
+                    text_color: element.attributes.text_color(),
                 })
             },
             Self::Text(str) => Ok(Element::Text(str)),
@@ -93,10 +101,11 @@ impl Element {
 
                 arr.into_iter().flat_map(|value| display.clone().expand(rl, value)).collect()
             },
-            Self::Element { childs, expand, direction, gap, margin, padding, scrollable, font_size } => {
+            Self::Element { id, childs, expand, direction, gap, margin, padding, scrollable, font_size, background, border, text_color } => {
                 vec![ ProcessedElement::Element {
+                    id: id.map(|str| fmt(context, str)),
                     childs: childs.into_iter().flat_map(|child| child.expand(rl, context)).collect(),
-                    expand, direction, gap, margin, padding, scrollable, font_size,
+                    expand, direction, gap, margin, padding, scrollable, font_size, background, border, text_color,
                 } ]
             },
         }

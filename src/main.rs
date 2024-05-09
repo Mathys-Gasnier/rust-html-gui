@@ -1,6 +1,6 @@
 use std::error::Error;
 
-use application::Application;
+use application::{Application, Handle};
 use serde::Serialize;
 
 mod consts;
@@ -13,12 +13,13 @@ mod math;
 #[derive(Serialize)]
 struct Context {
     app_name: String,
-    counter: u128,
+    counter: u16,
     projects: Vec<Project>
 }
 
 #[derive(Serialize)]
 struct Project {
+    id: u16,
     name: String
 }
 
@@ -27,18 +28,20 @@ impl Default for Context {
         Self {
             app_name: String::from("Demo App"),
             counter: 0,
-            projects: vec![
-                Project { name: String::from("Project One") },
-                Project { name: String::from("Project Two") },
-                Project { name: String::from("Project Three") },
-            ],
+            projects: vec![],
         }
     }
 }
 
 impl Application for Context {
-    fn update(self: &mut Self) {
-        self.counter += 1;
+    fn update(self: &mut Self, handle: &Handle) {
+        if handle.is_clicked("add-project") {
+            self.projects.push(Project { id: self.counter, name: format!("Project {}", self.counter) });
+            self.counter += 1;
+        }
+
+        self.projects.retain(|project| !handle.is_clicked(&format!("delete-{}", project.id)));
+
     }
 }
 

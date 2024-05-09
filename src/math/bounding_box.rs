@@ -13,6 +13,10 @@ pub struct BoundingBox {
 
 impl BoundingBox {
 
+    pub fn within(&self, position: Vector2) -> bool {
+        self.border_rect().check_collision_point_rec(position)
+    }
+
     pub fn vector2(&self) -> Vector2 {
         Vector2::new(self.x as f32, self.y as f32)
     }
